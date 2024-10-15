@@ -3,6 +3,7 @@ package com.food_delivery_system.food_delivery_system.service;
 import com.food_delivery_system.food_delivery_system.model.Order;
 import com.food_delivery_system.food_delivery_system.model.Restaurant;
 import com.food_delivery_system.food_delivery_system.model.OrderItem;
+import com.food_delivery_system.food_delivery_system.utils.ConcurrencyUtils;
 import com.food_delivery_system.food_delivery_system.repo.OrderRepository;
 import com.food_delivery_system.food_delivery_system.repo.RestaurantRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.locks.Lock;
 
 @Service
 public class OrderService {
@@ -22,16 +24,30 @@ public class OrderService {
 
     // Place a new order
     public Order placeOrder(Order order) {
-        // Add logic to validate order items and check restaurant capacity
-        // Example: Fetch the restaurant to check if it can fulfill the order
-        Optional<Restaurant> restaurant = restaurantRepository.findById(order.getRestaurant().getId());
-        if (restaurant.isPresent()) {
-            // Check if the restaurant can fulfill the order based on its capacity
-            // Add additional business logic here as needed
-            return orderRepository.save(order); // Save the order to the database
-        } else {
-            throw new RuntimeException("Restaurant not found with ID: " + order.getRestaurant().getId());
-        }
+            Long restaurantId = order.getRestaurant().getId();
+            Optional<Restaurant> restaurantOpt = restaurantRepository.findById(restaurantId);
+
+            if (restaurantOpt.isPresent()) {
+                Restaurant restaurant = restaurantOpt.get();
+
+                Lock lock = ConcurrencyUtils.getRestaurantLock(restaurantId);
+                boolean lockAcquired = lock.tryLock(); // Try to acquire the lock
+
+                if (!lockAcquired) {
+                    throw new RuntimeException("Restaurant is busy processing other orders. Please try again later.");
+                }
+
+                try {
+                    if (restaurant.getCapacity() < order.getOrderItems().size()) {
+                        throw new RuntimeException("Restaurant cannot fulfill the order due to capacity limits.");
+                    }
+                    return orderRepository.save(order);
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                throw new RuntimeException("Restaurant not found with ID: " + restaurantId);
+            }
     }
 
     // Retrieve all orders
