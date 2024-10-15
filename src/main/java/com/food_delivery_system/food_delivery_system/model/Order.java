@@ -19,6 +19,9 @@ public class Order {
     @JoinColumn(name = "restaurant_id", nullable = false) // Foreign key reference to the restaurant
     private Restaurant restaurant;
 
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<OrderItem> orderItems;
+
     // Default constructor
     public Order() {}
 
@@ -50,6 +53,10 @@ public class Order {
 
     public Restaurant getRestaurant() {
         return restaurant;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
     }
 
     public void setRestaurant(Restaurant restaurant) {
