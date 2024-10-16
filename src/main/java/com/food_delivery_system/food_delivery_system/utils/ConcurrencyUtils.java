@@ -6,11 +6,9 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class ConcurrencyUtils {
 
-    // A map to manage locks for each restaurant to avoid race conditions when processing orders
     private static final ConcurrentHashMap<Long, Lock> restaurantLocks = new ConcurrentHashMap<>();
 
     public static Lock getRestaurantLock(Long restaurantId) {
-        // Ensure only one lock per restaurant ID (thread-safe)
         return restaurantLocks.computeIfAbsent(restaurantId, id -> new ReentrantLock());
     }
 
@@ -33,7 +31,7 @@ public class ConcurrencyUtils {
     public static void releaseLock(Long restaurantId) {
         Lock lock = getRestaurantLock(restaurantId);
         if (lock.isHeldByCurrentThread()) {
-            lock.unlock(); // Only unlock if the current thread holds the lock
+            lock.unlock(); 
         }
     }
 
@@ -43,6 +41,6 @@ public class ConcurrencyUtils {
      * @param restaurantId The ID of the restaurant to remove the lock for.
      */
     public static void removeLock(Long restaurantId) {
-        restaurantLocks.remove(restaurantId); // Remove the lock mapping
+        restaurantLocks.remove(restaurantId); 
     }
 }
