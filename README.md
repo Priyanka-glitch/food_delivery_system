@@ -29,3 +29,25 @@ Get Restaurant by ID request
 
 curl --location 'http://localhost:8080/api/restaurants/1' \
 --data ''
+
+Update menu items
+
+curl --location --request PUT 'http://localhost:8080/api/restaurants/14' \
+--header 'Content-Type: application/json' \
+--data '{
+    "name": "Test Restaurant14",
+    "capacity": 100,
+    "rating": 4.7,
+    "menuItems": [
+        {
+            "name": "Burger2",
+            "price": 5.99,
+            "quantity": 100
+        },
+        {
+            "name": "Pizza2",
+            "price": 8.99,
+            "quantity": 50
+        }
+    ]
+}'
